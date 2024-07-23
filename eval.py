@@ -17,8 +17,8 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 #checkpoint = "bigscience/bloomz-3b"
 #checkpoint = "google/gemma-7b-it"
 #checkpoint = "meta-llama/Meta-Llama-3-8B"
-checkpoint = "CohereForAI/aya-23-8B"
-#checkpoint = "meta-llama/Meta-Llama-3-8B-Instruct"
+#checkpoint = "CohereForAI/aya-23-8B"
+checkpoint = "meta-llama/Meta-Llama-3-8B-Instruct"
 
 tokenizer = AutoTokenizer.from_pretrained(checkpoint,padding_side='left')
 model = AutoModelForCausalLM.from_pretrained(checkpoint,).to(device)
@@ -30,7 +30,7 @@ if tokenizer.pad_token is None:
 
 
 
-xquad_dataset = load_dataset('google/xquad','xquad.hi') #hi
+xquad_dataset = load_dataset('google/xquad','xquad.en') #hi
 val_dataset = xquad_dataset["validation"].select(range(300))
 val_dataset = CustomDataset(val_dataset,tokenizer,k_shot = 0,max_length =500, model = "Aya")
 val_loader = DataLoader(val_dataset, batch_size=4, shuffle=False)
@@ -49,7 +49,7 @@ with torch.no_grad():
         prompt_padded_len = len(input_ids[0])
 
 
-        output = model.generate(input_ids, max_new_tokens=500, num_return_sequences=1)
+        output = model.generate(input_ids, max_new_tokens=500, num_return_sequences=1,)
         gen_tokens = [
       gt[prompt_padded_len:] for gt in output
     ]

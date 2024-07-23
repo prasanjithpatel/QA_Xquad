@@ -63,6 +63,17 @@ class CustomDataset(Dataset):
                 'answer' : answer
             }
         
+        
+
+        if self.model == 'llama3':
+            messages = [
+                        {"role": "system", "content": str(prompt)},
+            ]
+            terminators = [
+                self.tokenizer.eos_token_id,
+                self.tokenizer.convert_tokens_to_ids("<|eot_id|>")
+            ]
+
 
      
 
