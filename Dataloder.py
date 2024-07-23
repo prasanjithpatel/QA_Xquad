@@ -11,11 +11,12 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 class CustomDataset(Dataset):
-    def __init__(self,data,tokenizer,k_shot,max_length):
+    def __init__(self,data,tokenizer,k_shot,max_length,model):
         self.data = data
         self.tokenizer = tokenizer
         self.k_shot = k_shot
         self.max_length = max_length
+        self.model = model 
 
 
     def __len__(self):
@@ -47,8 +48,21 @@ class CustomDataset(Dataset):
         indic_answer = example['indic_answer']
         eng_answer = example['Eng_answer']'''
 
-        
         prompt = self.get_prompt(question,context)
+
+        if self.model == "Aya":
+            messages = [{"role": "user", "content": str(prompt)}]
+            input_ids = self.tokenizer.apply_chat_template(messages, tokenize=True, 
+                                                           add_generation_prompt=True, 
+                                                           padding = "max_length",
+                                                           truncation = True,
+                                                           max_length = 512,
+                                                           return_tensors="pt").squeeze(0).to(device)
+            return {
+                'input_ids' : input_ids,
+                'answer' : answer
+            }
+        
 
      
 

@@ -32,7 +32,7 @@ if tokenizer.pad_token is None:
 
 xquad_dataset = load_dataset('google/xquad','xquad.hi') #hi
 val_dataset = xquad_dataset["validation"].select(range(300))
-val_dataset = CustomDataset(val_dataset,tokenizer,k_shot = 0,max_length =500)
+val_dataset = CustomDataset(val_dataset,tokenizer,k_shot = 0,max_length =500, model = "Aya")
 val_loader = DataLoader(val_dataset, batch_size=4, shuffle=False)
 print(len(val_dataset))
 
@@ -46,10 +46,22 @@ with torch.no_grad():
     for batch in val_loader:
         input_ids = batch['input_ids']
         Answers = batch["answer"]
+        prompt_padded_len = len(input_ids[0])
+
+
         output = model.generate(input_ids, max_new_tokens=500, num_return_sequences=1)
-        model_output = tokenizer.batch_decode(output, skip_special_tokens=True)
+        gen_tokens = [
+      gt[prompt_padded_len:] for gt in output
+    ]
+        model_output = tokenizer.batch_decode(gen_tokens, skip_special_tokens=True)
 
         # Debugging print statements
+
+        print(model_output)
+
+        for i in range(len(model_output)):
+            predictions.append(model_output[i])
+            ground_truth.append(Answers['text'][0][i])
 
         '''
         for i, (input_text, generated_text) in enumerate(zip(input_ids, model_output)):
@@ -58,14 +70,23 @@ with torch.no_grad():
             print(f"Generated Output {i}: {generated_text}")
             print(generated_text.split('\n')[-1].replace("</s>", ""),"iam generated")'''
 
-        
+        '''
 
         for i in range(len(model_output)):
             ground_truth.append(Answers["text"][0][i])
             if count<=10:
                 print(model_output[i].split('\n')[-1].replace("</s>", ""),)
                 count+=1
-            predictions.append(model_output[i].split('\n')[-1].replace("</s>", ""))
+            predictions.append(model_output[i].split('\n')[-1].replace("</s>", ""))'''
+
+
+
+
+
+
+
+
+
 
 
 f1_scores = [token_f1_score(p, g) for p, g in zip(predictions, ground_truth)]

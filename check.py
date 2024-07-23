@@ -31,19 +31,28 @@ model = AutoModelForCausalLM.from_pretrained(checkpoint,).to(device)
 
 input_prompt = f"""
                     answer the question based on the context below.Answer in the same language used in the query Keep the answer short and concise.
-                    ### Question:{xquad_dataset['validation'][2]['question']}
-                    ### Context:{xquad_dataset['validation'][2]['context']}
+                    ### Question:{xquad_dataset['validation'][0]['question']}
+                    ### Context:{xquad_dataset['validation'][0]['context']}
                 
                     """
 
-
 messages = [{"role": "user", "content": str(input_prompt)}]
 input_ids = tokenizer.apply_chat_template(messages, tokenize=True, add_generation_prompt=True, return_tensors="pt").to(device)
-#inputs = tokenizer.encode(input_ids, return_tensors="pt").to(device)
+prompt_padded_len = len(input_ids[0])
+print(prompt_padded_len)
 outputs = model.generate(input_ids ,max_length =500)
-print(tokenizer.decode(outputs[0]))
 
-#print(tokenizer.decode(outputs[0]).split('\n')[-1].replace("</s>", ""))
+gen_tokens = [
+      gt[prompt_padded_len:] for gt in outputs
+    ]
+gen_text = tokenizer.batch_decode(gen_tokens, skip_special_tokens=True)
+
+#inputs = tokenizer.encode(input_ids, return_tensors="pt").to(device)
+#print(tokenizer.decode(outputs[0]))
+
+
+print(gen_text)
+#print(tokenizer.decode(outputs[0]))
 
 
 
