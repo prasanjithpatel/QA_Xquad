@@ -16,13 +16,17 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 #checkpoint = "bigscience/bloomz-560m"
 #checkpoint = "bigscience/bloomz-3b"
 #checkpoint = "google/gemma-7b-it"
-#checkpoint = "meta-llama/Meta-Llama-3-8B"
+checkpoint = "meta-llama/Meta-Llama-3-8B"
 #checkpoint = "CohereForAI/aya-23-8B"
-checkpoint = "meta-llama/Meta-Llama-3-8B-Instruct"
+#checkpoint = "meta-llama/Meta-Llama-3-8B-Instruct"
 
 tokenizer = AutoTokenizer.from_pretrained(checkpoint,padding_side='left')
 model = AutoModelForCausalLM.from_pretrained(checkpoint,).to(device)
 
+terminators = [
+    tokenizer.eos_token_id,
+    tokenizer.convert_tokens_to_ids("<|eot_id|>")
+]
 
 if tokenizer.pad_token is None:
     tokenizer.add_special_tokens({'pad_token': '[PAD]'})
@@ -31,10 +35,13 @@ if tokenizer.pad_token is None:
 
 
 xquad_dataset = load_dataset('google/xquad','xquad.en') #hi
+xquad_dataset_indic = load_dataset('google/xquad','xquad.hi')
+
 val_dataset = xquad_dataset["validation"].select(range(300))
-val_dataset = CustomDataset(val_dataset,tokenizer,k_shot = 0,max_length =500, model = "Aya")
-val_loader = DataLoader(val_dataset, batch_size=4, shuffle=False)
-print(len(val_dataset))
+val_dataset1 = xquad_dataset_indic['validation'].select(range(300))
+
+dataset = CustomDataset(val_dataset,val_dataset1,tokenizer,k_shot = 0,max_length =500, model = "llama3")
+val_loader = DataLoader(dataset, batch_size=4, shuffle=False)
 
 
 
@@ -49,14 +56,15 @@ with torch.no_grad():
         prompt_padded_len = len(input_ids[0])
 
 
-        output = model.generate(input_ids, max_new_tokens=500, num_return_sequences=1,)
+        output = model.generate(input_ids, max_new_tokens=500, num_return_sequences=1,eos_token_id = terminators)
         gen_tokens = [
       gt[prompt_padded_len:] for gt in output
     ]
+        #for bloom model use  output
         model_output = tokenizer.batch_decode(gen_tokens, skip_special_tokens=True)
 
         # Debugging print statements
-
+        print(Answers)
         print(model_output)
 
         for i in range(len(model_output)):
