@@ -54,7 +54,7 @@ class CustomDataset(Dataset):
 
         if self.model != None:
 
-            messages = [{"role": "user", "content": str(prompt)}]
+            messages = [{"role": "system", "content": str(prompt)}]
             input_ids = self.tokenizer.apply_chat_template(messages, tokenize=True, 
                                                            add_generation_prompt=True, 
                                                            padding = "max_length",

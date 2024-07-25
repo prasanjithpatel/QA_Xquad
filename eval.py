@@ -16,9 +16,9 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 #checkpoint = "bigscience/bloomz-560m"
 #checkpoint = "bigscience/bloomz-3b"
 #checkpoint = "google/gemma-7b-it"
-checkpoint = "meta-llama/Meta-Llama-3-8B"
+#checkpoint = "meta-llama/Meta-Llama-3-8B"
 #checkpoint = "CohereForAI/aya-23-8B"
-#checkpoint = "meta-llama/Meta-Llama-3-8B-Instruct"
+checkpoint = "meta-llama/Meta-Llama-3-8B-Instruct"
 
 tokenizer = AutoTokenizer.from_pretrained(checkpoint,padding_side='left')
 model = AutoModelForCausalLM.from_pretrained(checkpoint,).to(device)
@@ -56,7 +56,13 @@ with torch.no_grad():
         prompt_padded_len = len(input_ids[0])
 
 
-        output = model.generate(input_ids, max_new_tokens=500, num_return_sequences=1,eos_token_id = terminators)
+        output = model.generate(input_ids, 
+                                max_new_tokens=500, 
+                                num_return_sequences=1,
+                                eos_token_id = terminators,   
+                                do_sample=True,
+                                temperature=0.6,
+                                top_p=0.9,)
         gen_tokens = [
       gt[prompt_padded_len:] for gt in output
     ]
